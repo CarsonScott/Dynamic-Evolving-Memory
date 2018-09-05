@@ -62,3 +62,20 @@ class Template(Dict):
 				output = tuple(output)
 			return output
 		else:return key
+
+	def define(self, *data):
+		if isinstance(data,list):
+			if len(data) == 2:
+				key,value=data
+				print(key,value)
+				if isinstance(key,list):
+					for i in range(len(keys)):
+						k=key[i]
+						if isinstance(value,list):
+							x=value[i]
+						else:x=value
+						self.set(k,x)
+				else:self.set(key,value)
+		elif isinstance(data, Dict):
+			for i in data.keys():
+				self.set(i, data[i])
