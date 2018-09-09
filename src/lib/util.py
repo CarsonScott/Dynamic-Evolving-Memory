@@ -85,12 +85,14 @@ def apply(F,X):
 	print(F,X)
 	return F(X)
 
-def eq_type(x,y):
-	if type(x) != type(y):
-		if type(x) in [int, float] and type(y) in [int, float]:
-			return True
-		return False
+def eq_type(*X):
+	for i in range(len(X)-1):
+		x=X[i]
+		y=X[i+1]
+		if not (type(x) in [int, float] and type(y) in [int, float]) and type(x) != type(y):
+				return False
 	return True
+
 
 def norm_error(x,y, root=True):
 	if eq_type(x,y):
@@ -148,6 +150,24 @@ def flat(X):
 	elif len(X) == 1:
 		return [X[0]]
 
+def merge(X, collective=False):
+	if eq_type(*X):
+		Y=Dict()
+		K=list()
+		R=list()
+		for i in range(len(X)):
+			x=X[i]
+			for k in x.keys():
+				if k not in K:
+					Y[k]=x[k]
+					K.append(k)
+				elif collective and x[k] not in Y[k]:
+					if k not in R:
+						Y[k]=[Y[k]]
+						R.append(k)
+					Y[k].append(x[k])
+		return Y
+
 def fill(source, *reference):
 	output=Dict()
 	for i in source.keys():
@@ -184,6 +204,47 @@ def to_list(data, keys=None):
 		Y.append(data[i])
 	return Y
 
+def is_num(x):
+	return isinstance(x, int) or isinstance(x, float)
+
+def similarity(*data):
+	output=0
+	for i in range(len(data)-1):
+		X=data[i]
+		Y=data[i+1]
+		y=0
+		if eq_type(X,Y):
+			if isinstance(X, list):
+				count=0
+				offset=abs(len(X)-len(Y))
+				for i in range(len(X)):
+					if i < len(Y):
+						y += similarity(X[i], Y[i])
+						count += 1
+				if len(X)>0:
+					y/=len(X)
+			elif isinstance(X, dict):
+				count=0
+				Kx=list(X.keys())
+				Ky=list(Y.keys())
+				offset=len(compliment(Kx,Ky))+len(compliment(Ky,Kx))
+				for i in Kx:
+					if i in Ky:
+						y += similarity(X[i], Y[i])
+						count += 1
+				if len(Kx)>0:
+					y/=len(Kx)
+			elif X == Y:
+				y=1
+		output += pow(y, 2)
+	return sqrt(output)
+
+def rand_list(size, data):
+	Y=[]
+	for i in range(size):
+		y=rand_select(data)
+		Y.append(y)
+	return Y
 def TRUE(x):
 	return True
 

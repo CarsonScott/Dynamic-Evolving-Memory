@@ -26,3 +26,9 @@ class Model(Template):
 		if key in self.lock_list:
 			return self[key](*data)
 		return super().get(key)
+
+	def roles(self):
+		return self.role_list
+
+	def locks(self):
+		return self.lock_list

@@ -2,11 +2,12 @@ from lib.util import *
 from model import *
 
 class Space(Model):
-	def __init__(self):
+	def __init__(self, ordered=False):
 		super().__init__()
 		self.assign('neighbors', Dict())
 		self.assign('paths', list())
 		self.assign('keys', list())
+		self.assign('ordered', ordered)
 
 	def order(self, keys):
 		order=self.get('keys')
@@ -23,14 +24,23 @@ class Space(Model):
 		self[key]=obj
 
 	def connect(self, keys, rel=UNKNOWN):
-		keys=self.order(keys)
-		path=nest(keys)
-		self['paths'].append(path)
+		paths=keys
+		if self.get('ordered'):
+			keys=self.order(keys)
+			path=nest(keys)
+			self['paths'].append(path)
 		for i in range(len(keys)-1):
 			k1=keys[i]
 			k2=keys[i+1]
 			self['neighbors'][k1][k2]=rel
 
+	def neighbors(self, key):
+		if key in self.get('neighbors').keys():
+			return self.order(self.get('neighbors')[key].keys())
+		else:return []
+
 	def traverse(self, path):
 		return self.retrieve(flat(path))
 
+	def relation(self, key1, key2):
+		return self.get('neighbors')[key1][key2]

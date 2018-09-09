@@ -1,8 +1,5 @@
 from function import *
 
-def type_constraint(t):
-	return Function(EQ, ['t','y'], ['x'], {'t':t,'y':Function(TYPE,['x'],['x'])})
-
 class Formula(Model):
 	def __init__(self, function, arity=INF, constraints=Dict()):
 		super().__init__()
@@ -20,7 +17,6 @@ class Formula(Model):
 			if not isinstance(C,list):
 				C=[C]
 			inputs['*']=C
-	
 		self.assign('arity', arity)
 		self.assign('function', function)
 		self.assign('constraints', inputs)
@@ -39,14 +35,12 @@ class Formula(Model):
 		constraints=self.get('constraints')
 		if arity!=INF and len(data)!=arity:
 			return False
-
 		for i in range(len(data)):
 			x=data[i]
 			if arity!=INF:
 				f=list(constraints[i])
 				if not AND(apply(f,x)):
 					return False
-			
 			if '*' in constraints.keys():
 				u=(constraints['*'])
 				if not AND(apply(u, x)):
@@ -55,3 +49,4 @@ class Formula(Model):
 
 	def append(self, index, constraint):
 		self['constraints'][index].append(constraint)
+		

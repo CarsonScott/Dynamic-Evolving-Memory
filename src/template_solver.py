@@ -11,14 +11,39 @@ class TemplateSolver:
 		self.problems=[]
 		self.data = None
 		self.result = None
+		self.output = None
+		self.error = None
+		self.template = None
 		self.objective = None
 
-	def __call__(self):
-		output = Template()
+	def convert(self):
+		template=Dict()
 		for i in self.result:
-			if i in self.result:
-				output.set(i, self.functions[i], FUNC)
-		return output
+			if i!=UNKNOWN:
+				template[i]=self.functions[i]
+		self.template=Template(template)
+		return self.template
+
+	def compute(self):
+		output=None
+		if self.template!=None:
+			output=self.template(self.data)
+		self.output=output
+		return self.output
+
+	def rate(self):
+		rating=None
+		if self.output!=None:
+			rating=norm_error(self.output, self.objective)
+		self.error=rating
+		return self.error
+
+	def __call__(self, data=None, objective=None):
+		self.update(data, objective)
+		self.convert()
+		self.compute()
+		self.rate()
+		return self.output
 
 	def update(self, data=None, objective=None):
 		if data!=None and objective!=None:
