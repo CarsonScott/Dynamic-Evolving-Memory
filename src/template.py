@@ -63,16 +63,21 @@ class Template(Dict):
 	def retrieve(self, key):
 		output = UNKNOWN
 		if key in self.keys():
-			key=self[key]
-		if isinstance(key, list) or isinstance(key, tuple):
-			output = []
-			for i in range(len(key)):
-				y = self.retrieve(key[i])
-				output.append(y)
-			if isinstance(key, tuple):
-				output = tuple(output)
-			return output
-		else:return key
+			output=self[key]
+		else:output=key
+
+		if isinstance(output, list) or isinstance(output, tuple):
+			Y = []
+			for i in range(len(output)):
+				y = output[i]
+				if y in self.keys():
+					y=self[y]
+				elif isinstance(y, list) or isinstance(y, tuple):
+					y=self.retrieve(y)
+				Y.append(y)
+			Y=type(output)(Y)
+			output=Y
+		return output
 
 	def define(self, *data):
 		if isinstance(data,list):

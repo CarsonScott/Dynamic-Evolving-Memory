@@ -32,7 +32,14 @@ class Space(Model):
 		for i in range(len(keys)-1):
 			k1=keys[i]
 			k2=keys[i+1]
+
+			if k1 not in self.keys():
+				self.create(k1)
+
 			self['neighbors'][k1][k2]=rel
+
+	def points(self):
+		return self.get('keys')
 
 	def neighbors(self, key):
 		if key in self.get('neighbors').keys():

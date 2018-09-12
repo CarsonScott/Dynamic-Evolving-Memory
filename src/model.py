@@ -32,3 +32,6 @@ class Model(Template):
 
 	def locks(self):
 		return self.lock_list
+
+	def known(self, key):
+		return self.get(key)!=UNKNOWN

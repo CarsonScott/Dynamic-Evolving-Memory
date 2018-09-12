@@ -50,3 +50,29 @@ class Formula(Model):
 	def append(self, index, constraint):
 		self['constraints'][index].append(constraint)
 		
+
+def create_formula(data):
+	if isinstance(data, Dict) and contains(data.keys(), ['arity', 'function', 'constraints']):
+		a=data['arity']
+		f=data['function']
+		c=data['constraints']
+		F=Formula(f,a)
+		for i in data.keys():
+			F.set(i, data[i])
+		return F
+def compose_function(data):
+	if isinstance(data,list):
+		output=[]
+		for i in range(len(data)):
+			output.append(compose_function(data[i]))
+		return output
+	elif isinstance(data,tuple):
+		for i in range(len(data)-1):
+			a=data[i]
+			b=data[i+1]
+			if isinstance(a, Dict) and isinstance(b, list):
+				formula=create_formula(a)
+				inputs=compose_function(b)
+				function=formula(*inputs)
+				return function
+	else:return data

@@ -36,6 +36,9 @@ class List:
 
 class Unknown:
 	def __repr__(self):return '<Unknown>'
+
+class Empty:
+	def __repr__(self):return '<Empty>'
 class Infinite:
 	def __repr__(self):return '<Infinite>'
 class Func:
@@ -48,6 +51,7 @@ class Cons:
 	def __repr__(self):return '<Constant>'
 
 UNKNOWN=Unknown()
+EMPTY=Empty()
 INF=Infinite()
 FUNC=Func()
 DATA=Data()
@@ -150,23 +154,18 @@ def flat(X):
 	elif len(X) == 1:
 		return [X[0]]
 
-def merge(X, collective=False):
-	if eq_type(*X):
-		Y=Dict()
-		K=list()
-		R=list()
-		for i in range(len(X)):
-			x=X[i]
-			for k in x.keys():
-				if k not in K:
-					Y[k]=x[k]
-					K.append(k)
-				elif collective and x[k] not in Y[k]:
-					if k not in R:
-						Y[k]=[Y[k]]
-						R.append(k)
-					Y[k].append(x[k])
-		return Y
+def compound(*data):
+	keys=[]
+	output=data[0]
+	for i in range(1, len(data)):
+		d=data[i]
+		for j in d.keys():
+			if j not in keys:
+				output[j]=[d[j]]
+				keys.append(j)
+			elif d[j] not in output[j]:
+				output[j]+=[d[j]]
+	return output
 
 def fill(source, *reference):
 	output=Dict()
@@ -287,10 +286,9 @@ NO=NOT
 def EQ(*X):
 	if len(X)==1 and isinstance(X,list) or isinstance(X,tuple):
 		X=X[0]
-	if len(X)<2:
+	if (isinstance(X, list) or isinstance(X, tuple)) and len(X)<2:
 		return True
-	else:
+	elif isinstance(X, list):
 		if X[0]==X[1]:
-			return EQ(X[2:])
+			return EQ(X[1:])
 		return False
-
