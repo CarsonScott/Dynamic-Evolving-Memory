@@ -2,8 +2,8 @@ from lib.util import *
 from model import *
 
 class Space(Model):
-	def __init__(self, ordered=False):
-		super().__init__()
+	def __init__(self, ordered=False, data=Dict()):
+		super().__init__(data)
 		self.assign('neighbors', Dict())
 		self.assign('paths', list())
 		self.assign('keys', list())

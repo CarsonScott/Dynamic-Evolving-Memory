@@ -18,7 +18,7 @@ class Model(Template):
 		self.lock_list.append(key)
 		self[key] = Lock(self[key], constraint)
 
-	def assign(self, role, data):
+	def assign(self, role, data=UNKNOWN):
 		self.role_list.append(role)
 		self[role]=data
 
