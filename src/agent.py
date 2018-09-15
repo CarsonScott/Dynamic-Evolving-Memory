@@ -116,6 +116,7 @@ class ComputerAgent(Agent):
 		self.create('functions', 'get_classes', Object(['key'], {'function':'get_classes'}))
 		self.create('functions', 'compute', Object(['expression'], {'function':'reduce'}))
 		self.create('functions', 'execute', Object(['data', 'function'], {'function':'execute'}))
+		self.create('functions', 'select', Object(['*'], {'function':self.select}))
 		self.create('functions', 'and', Object(['*'], {'function':AND}))
 		self.create('functions', 'or', Object(['*'], {'function':OR}))
 
@@ -230,7 +231,7 @@ class ComputerAgent(Agent):
 				k=function['key']
 				data=(k)
 				func=self.get_classes
-				
+
 			elif f=='reduce':
 				e=function['expression']
 				data=(e)
@@ -281,14 +282,15 @@ class MemoryAgent(ComputerAgent):
 	def __init__(self, memory_size=UNKNOWN):
 		super().__init__()
 		self.define('inputs')
-		self.define('mutable')
 		self.define('main')
+		self.define('mutable')
 		self.create('mutable', 'memory', [])
 		self.create('mutable', 'buffer', [])
 		self.create('mutable', 'output', [])
 		if memory_size!=UNKNOWN:
 			self.set_capacity('memory', memory_size)
 
+	# Determine validity of syntax of expression.
 	def is_valid(self, expression):
 		if is_type(expression, tuple):
 			for i in range(len(expression)):
@@ -298,12 +300,12 @@ class MemoryAgent(ComputerAgent):
 			return True
 		return super().is_valid(expression)
 
+	# Record expression and compute results.
 	def compute(self, expression, root=True):
 		if is_type(expression, str):
 			if self.in_class(expression, 'expressions'):
 				expression=self.get(expression)
 		if root:self.update_buffer(expression)
-		
 		if is_type(expression, tuple):
 			outputs=[]
 			for i in range(len(expression)):
@@ -313,11 +315,13 @@ class MemoryAgent(ComputerAgent):
 			return outputs
 		else:return super().compute(expression)
 
+	# Combine words into sentence and store in buffer.
 	def update_buffer(self, expression):
 		words=combine_elements(expression)
 		sentence=merge(' ', words)
 		self.send_to('buffer', sentence)
 
+	# Combine sentences into phrase and store in memory. 
 	def update_memory(self):
 		words=self['buffer']
 		sentences=combine_elements(words)
@@ -328,6 +332,7 @@ class MemoryAgent(ComputerAgent):
 		self['buffer']=[]
 		return self['memory']
 
+	# Associated phrases with results and store in output.
 	def update_output(self, data):
 		buffer=self['buffer']
 		output=combine_rows(buffer, data)
@@ -336,9 +341,9 @@ class MemoryAgent(ComputerAgent):
 			yi=output[i]
 			yi=Translation(*yi)
 			self.send_to('output', yi)
-		# self['output']=output
 		return self['output']
 
+	# Compute phrase-sequence and update mutable storage
 	def update(self, *data):
 		inputs=self.meta['inputs']
 		for i in range(len(data)):
@@ -357,26 +362,17 @@ class MemoryAgent(ComputerAgent):
 		memory=self.update_memory()
 		return output
 
-
-class GoalAgent(MemoryAgent):
-	def select(self, constraint, options):
-		indices=filter(constraint, *options)
+	# determine options that satisfy constraint
+	def select(self, *data):
+		constraint=data[0]
+		options=data[1:][0]
+		data=[self[i] for i in options if i in self]
+		if constraint in self: 
+			function=self[constraint] 
+		else:function=constraint
+		indices=filter(function, *data)
 		outputs=[]
 		for i in indices:
 			oi=options[i]
 			outputs.append(oi)
 		return outputs	
-
-def add(*x):
-	return sum(x)
-def dif(*x):
-	return x[1]-x[0]
-
-def filter(f, *x):
-	y=[]
-	for i in range(len(x)):
-		xi=x[i]
-		yi=f(xi)
-		if yi==True:
-			y.append(i)
-	return y
