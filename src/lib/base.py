@@ -4,6 +4,8 @@ def is_type(x, type):
 	return isinstance(x, type)
 def is_tuple(x):
 	return is_type(x, tuple)
+def is_int(x):
+	return is_type(x, int)
 def is_list(x):
 	return is_type(x, list)
 def is_int(x):
@@ -17,6 +19,8 @@ def is_num(x):
 	return is_int(x) or is_float(x)
 def is_iter(x):
 	return is_list(x) or is_tuple(x)
+def is_even(x):
+	return is_num(x) and x%2==0
 def eq_len(x,y):
 	return len(x)==len(y)
 def eq_val(x, y):

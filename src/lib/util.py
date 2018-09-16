@@ -97,7 +97,6 @@ def eq_type(*X):
 				return False
 	return True
 
-
 def norm_error(x,y, root=True):
 	if eq_type(x,y):
 		if isinstance(x, Dict) and equivalent(x.keys(), y.keys()):
@@ -178,6 +177,19 @@ def fill(source, *reference):
 					output[i]=reference[j][i]
 					break
 	return output
+
+def filter(data=Dict(), sources=[], keys=EMPTY):
+	if keys==EMPTY:
+		keys=data.keys()
+	for i in keys:
+		x=data[i]
+		if x==UNKNOWN:
+			for j in range(len(sources)):
+				if i in sources[j]:
+					x=sources[j][i]
+					break
+		data[i]=x
+	return data
 
 def to_dict(keys=None, values=None):
 	Y=Dict()

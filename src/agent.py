@@ -1,5 +1,23 @@
 from lib.base import *
-from space import *
+from model import *
+
+def filter(f, *x):
+	y=[]
+	for i in range(len(x)):
+		xi=x[i]
+		yi=f(xi)
+		if yi==True:
+			y.append(i)
+	return y
+
+def AND(*x):
+	return False not in x
+def OR(*x):
+	return True in x
+def ADD(*x):
+	return sum(x)
+def DIF(*x):
+	return x[1]-x[0]
 
 class Object(Model):
 	def __init__(self, inputs=[], data=Dict()):
@@ -41,9 +59,7 @@ class Translation(Object):
 		else:data['result']=result
 		super().__init__(['phrase', 'result'], data)
 
-print(Translation('a + b', 4))
-
-class Agent(Space):
+class Agent(Model):
 	def __init__(self):
 		super().__init__()
 		self.meta=Model()
@@ -91,288 +107,20 @@ class Agent(Space):
 				classes.append(i)
 		return classes
 
-def AND(*x):
-	print(x)
-	return False not in x
-def OR(*x):
-	return True in x
-class ComputerAgent(Agent):
-	def __init__(self):
-		super().__init__()
-		self.define('functions')
-		self.create('functions', 'send-to', Object(['target', 'data'], {'function':'send-to'}))
-		self.create('functions', 'set-capacity', Object(['target', 'size'], {'function':'set-capacity'}))
-		self.create('functions', 'get-capacity', Object(['target'], {'function':'get-capacity'}))
-		self.create('functions', 'pull-from', Object(['target'], {'function':'pull-from'}))
-		self.create('functions', 'size-of', Object(['target'], {'function':'size-of'}))
-		self.create('functions', 'type-of', Object(['target'], {'function':'type-of'}))
-		self.create('functions', 'is-empty', Object(['target'], {'function':'is-empty'}))
-		self.create('functions', 'is-full', Object(['target'], {'function':'is-full'}))
-		self.create('functions', 'set', Object(['key', 'data'], {'function':'set'}))
-		self.create('functions', 'get', Object(['key'], {'function':'get'}))
-		self.create('functions', 'create', Object(['type', 'key', 'data'], {'function':'create'}))
-		self.create('functions', 'define', Object(['class'], {'function':'define'}))
-		self.create('functions', 'set_classes', Object(['key', 'class'], {'function':'set_classes'}))
-		self.create('functions', 'get_classes', Object(['key'], {'function':'get_classes'}))
-		self.create('functions', 'compute', Object(['expression'], {'function':'reduce'}))
-		self.create('functions', 'execute', Object(['data', 'function'], {'function':'execute'}))
-		self.create('functions', 'select', Object(['*'], {'function':self.select}))
-		self.create('functions', 'and', Object(['*'], {'function':AND}))
-		self.create('functions', 'or', Object(['*'], {'function':OR}))
 
-	def is_valid(self, expression):
-		if is_type(expression, list):
-			functions=self.meta['functions']
-			if len(expression) >= 1:
-				if is_type(expression[0], str):
-					if expression[0] in functions:
-						return True
-		return False
+# a=ComputerAgent()
+# print(a.compute(['define', 'new_class']))
+# print(a.compute(['create', 'new_class', 'x', 34]))
+# print(a.compute(['create', 'functions', 'add', Object(['a', 'b'], {'function':add})]))
+# print(a.compute(['add', 5, 6]))
+# print(a.compute(['get', 'x']))
+# print(a.compute(['define', 'c1']))
+# print(a.compute(['set_classes', 'x', 'c1']))
+# print(a.meta)
+# print()
 
-	def is_computable(self, function):
-		if is_type(function, Model):
-			if not is_type(function, Object):
-				if 'function' in function.keys():
-					return True	
-		return False
+# a.create('expressions', 'e1', ['add', 45, 5])
+# print(a.compute('e1'))
 
-	def reduce(self, expression):
-		if self.is_valid(expression):
-			x=[]
-			for i in range(len(expression)):
-				xi=expression[i]
-				if i==0 and xi in self:
-					xi=self[xi]
-				if self.is_valid(xi):
-					xi=self.reduce(xi)
-				x.append(xi)
-			f=x[0]
-			x=x[1:]
-			function=f(*x)
-			return function
-		return UNKNOWN
-	
-	def convert(self, function):
-		if self.is_computable(function):
-			f=function['function']
+# print(a.meta['functions'])
 
-			if f=='send-to':
-				t=function['target']
-				x=function['data']
-				data=t,x
-				func=self.send_to
-			
-			elif f=='pull-from': 
-				t=function['target']
-				data=(t)
-				func=self.pull_from
-
-			elif f=='set-capacity':
-				t=function['target']
-				s=function['size']
-				data=t,s
-				func=self.set_capacity
-
-			elif f=='get-capacity':
-				t=function['target']
-				data=(t)
-				func=self.get_capacity
-			
-			elif f=='size-of':
-				t=function['target']
-				data=(t)
-				func=self.size_of
-			
-			elif f=='type-of':
-				t=function['target']
-				data=(t)
-				func=self.type_of
-			
-			elif f=='is_empty': 
-				t=function['target']
-				data=(t)
-				func=self.is_empty
-			
-			elif f=='is_full':
-				t=function['target']
-				data=(t)
-				func=self.size_of
-			
-			elif f=='set':
-				k=function['key']
-				x=function['data']
-				data=k,x
-				func=self.__setitem__
-			
-			elif f=='get':
-				k=function['key']
-				data=(k)
-				func=self.__getitem__
-			
-			elif f=='create':
-				t=function['type']
-				k=function['key']
-				x=function['data']
-				data=t,k,x
-				func=self.create
-			
-			elif f=='define':
-				c=function['class']
-				data=(c)
-				func=self.define
-			
-			elif f=='set_classes':
-				k=function['key']
-				c=function['class']
-				data=k,c
-				func=self.set_classes
-
-			elif f=='get_classes':
-				k=function['key']
-				data=(k)
-				func=self.get_classes
-
-			elif f=='reduce':
-				e=function['expression']
-				data=(e)
-				func=self.reduce
-
-			elif f=='execute':
-				x=function['data']
-				g=function['function']
-				data=x,g
-				func=self.execute
-
-			elif callable(f):
-				func=f
-				data=[]
-				for i in function.keys():
-					if i != 'function':
-						xi=function[i]
-						if is_type(xi, str) and xi in self:
-							xi=self[xi]
-						data.append(xi)
-			else:return UNKNOWN
-
-			if not is_iter(data):
-				data=[data]
-			elif not is_type(data, list):
-				data=list(data)
-			return data, func
-		else:return UNKNOWN, UNKNOWN
-
-	def execute(self, data, func):
-		for i in range(len(data)):
-			if self.is_computable(data[i]):
-				x,f=self.convert(data[i])
-				data[i]=self.execute(x,f)
-		return func(*data)
-		
-	def compute(self, expression):
-		if is_type(expression, str):
-			if self.in_class(expression, 'expressions'):
-				expression=self.get(expression)
-		function=self.reduce(expression)
-		data,func=self.convert(function)
-		output=self.execute(data,func)
-		return output
-
-class MemoryAgent(ComputerAgent):
-	
-	def __init__(self, memory_size=UNKNOWN):
-		super().__init__()
-		self.define('inputs')
-		self.define('main')
-		self.define('mutable')
-		self.create('mutable', 'memory', [])
-		self.create('mutable', 'buffer', [])
-		self.create('mutable', 'output', [])
-		if memory_size!=UNKNOWN:
-			self.set_capacity('memory', memory_size)
-
-	# Determine validity of syntax of expression.
-	def is_valid(self, expression):
-		if is_type(expression, tuple):
-			for i in range(len(expression)):
-				ei=expression[i]
-				if not self.is_valid(ei):
-					return False
-			return True
-		return super().is_valid(expression)
-
-	# Record expression and compute results.
-	def compute(self, expression, root=True):
-		if is_type(expression, str):
-			if self.in_class(expression, 'expressions'):
-				expression=self.get(expression)
-		if root:self.update_buffer(expression)
-		if is_type(expression, tuple):
-			outputs=[]
-			for i in range(len(expression)):
-				ei=expression[i]
-				yi=self.compute(ei, root=False)
-				outputs.append(yi)
-			return outputs
-		else:return super().compute(expression)
-
-	# Combine words into sentence and store in buffer.
-	def update_buffer(self, expression):
-		words=combine_elements(expression)
-		sentence=merge(' ', words)
-		self.send_to('buffer', sentence)
-
-	# Combine sentences into phrase and store in memory. 
-	def update_memory(self):
-		words=self['buffer']
-		sentences=combine_elements(words)
-		phrase=merge(', ', sentences) + ';'
-		if self.is_full('memory'):
-			self.del_from('memory', 0)
-		self.send_to('memory', phrase)
-		self['buffer']=[]
-		return self['memory']
-
-	# Associated phrases with results and store in output.
-	def update_output(self, data):
-		buffer=self['buffer']
-		output=combine_rows(buffer, data)
-		self['output']=[]
-		for i in range(len(output)):
-			yi=output[i]
-			yi=Translation(*yi)
-			self.send_to('output', yi)
-		return self['output']
-
-	# Compute phrase-sequence and update mutable storage
-	def update(self, *data):
-		inputs=self.meta['inputs']
-		for i in range(len(data)):
-			xi=data[i]
-			ki=inputs[i]
-			self[ki]=xi
-		outputs=[]
-		functions=self.meta['main']
-		for i in functions:
-			expression=self[i]
-			output=self.compute(expression)
-			if output==None:
-				output=EMPTY
-			outputs.append(output)
-		output=self.update_output(outputs)
-		memory=self.update_memory()
-		return output
-
-	# determine options that satisfy constraint
-	def select(self, *data):
-		constraint=data[0]
-		options=data[1:][0]
-		data=[self[i] for i in options if i in self]
-		if constraint in self: 
-			function=self[constraint] 
-		else:function=constraint
-		indices=filter(function, *data)
-		outputs=[]
-		for i in indices:
-			oi=options[i]
-			outputs.append(oi)
-		return outputs	
