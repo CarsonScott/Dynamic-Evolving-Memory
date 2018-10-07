@@ -1,64 +1,6 @@
 from lib.base import *
 from model import *
 
-def filter(f, *x):
-	y=[]
-	for i in range(len(x)):
-		xi=x[i]
-		yi=f(xi)
-		if yi==True:
-			y.append(i)
-	return y
-
-def AND(*x):
-	return False not in x
-def OR(*x):
-	return True in x
-def ADD(*x):
-	return sum(x)
-def DIF(*x):
-	return x[1]-x[0]
-
-class Object(Model):
-	def __init__(self, inputs=[], data=Dict()):
-		self.inputs=inputs
-		super().__init__()
-		[self.assign(i, UNKNOWN) for i in inputs]
-		[self.assign(i, data[i]) for i in data.keys()]
-
-	def set_input(self, key, data=UNKNOWN):
-		if key not in self.inputs:
-			self.inputs.append(key)
-		self.assign(key, data)
-
-	def __call__(self, *data):
-		output=Model()
-		c=0
-		is_inf=False
-		if len(self.inputs)==1 and self.inputs[0]=='*':
-			is_inf=True
-			for i in range(len(data)):
-				output[str(i)] = data[i]
-
-		for i in self.keys():
-			if (is_inf and i != '*') or not is_inf:
-				if i in self.inputs:
-					yi=data[c]
-					c+=1
-				else:yi=self[i]
-				output[i]=yi
-		return output
-
-class Translation(Object):
-	def __init__(self, phrase=EMPTY, result=EMPTY):
-		inputs=[]
-		data={}
-		if phrase==EMPTY:inputs.append('phrase')
-		else:data['phrase']=phrase
-		if result==EMPTY:inputs.append('result')
-		else:data['result']=result
-		super().__init__(['phrase', 'result'], data)
-
 class Agent(Model):
 	def __init__(self):
 		super().__init__()
@@ -70,10 +12,12 @@ class Agent(Model):
 		return self[target].pop()
 	def del_from(self, target, index):
 		del self[target][index]
-	def set_capacity(self, target, size):
-		self.meta[str(target)+'-size'] = size
-	def get_capacity(self, target):
-		return self.meta[str(target)+'-size']
+	def set_attribute(self, key, attribute, data):
+		k=merge('-', [key, attribute])
+		self.set_members(k, data)
+	def get_attribute(self, key, attribute):
+		k=merge('-', [key, attribute])
+		return self.get_members(k)
 	def size_of(self, target):
 		return len(self[target])
 	def type_of(self, target):
@@ -81,14 +25,14 @@ class Agent(Model):
 	def is_empty(self, target):
 		return self.size_of(target)==0
 	def is_full(self, target):
-		return self.size_of(target)==self.get_capacity(target)
+		return self.size_of(target)==self.get_attribute(target, 'size')
 	def is_class(self, name):
-		return name in self.meta and is_type(self.meta[name], list)
+		return name in self.meta and is_type(self.get_members(name), list)
 	def in_class(self, key, name):
 		if self.is_class(name):
-			return key in self.meta[name]
+			return key in self.get_members(name)
 	def define(self, name):
-		self.meta[name]=[]
+		self.set_members(name, [])
 	def create(self, type, key, data):
 		self.set_classes(key, type)
 		self.assign(key, data)
@@ -99,14 +43,17 @@ class Agent(Model):
 				self.set_classes(key, ni)
 		elif self.is_class(name):
 			if not self.in_class(key, name):
-				self.meta[name].append(key)
+				self.get_members(name).append(key)
 	def get_classes(self, key):
 		classes=[]
 		for i in self.meta.keys():
 			if self.in_class(key, i):
 				classes.append(i)
 		return classes
-
+	def get_members(self, name):
+		return self.meta[name]
+	def set_members(self, name, members):
+		self.meta[name]=members
 
 # a=ComputerAgent()
 # print(a.compute(['define', 'new_class']))
