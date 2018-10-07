@@ -50,7 +50,6 @@ class Formula(Model):
 	def append(self, index, constraint):
 		self['constraints'][index].append(constraint)
 		
-
 def create_formula(data):
 	if isinstance(data, Dict) and contains(data.keys(), ['arity', 'function', 'constraints']):
 		a=data['arity']

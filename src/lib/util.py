@@ -59,6 +59,32 @@ EXPR=Expr()
 CONS=Cons()
 SET='set'
 
+def AND(*x):
+	return False not in x
+def OR(*x):
+	return True in x
+def NOT(*x):
+	return True not in x
+def ADD(*x):
+	return sum(x)
+def MUL(*x):
+	return product(x)
+def AVG(*x):
+	return average(x)
+def DIV(*x):
+	return x[0]/x[1]
+def DIF(*x):
+	return x[0]-x[1]
+
+def filter(f, *x):
+	y=[]
+	for i in range(len(x)):
+		xi=x[i]
+		yi=f(xi)
+		if yi==True:
+			y.append(i)
+	return y
+
 def product(X):
 	x = X[0]
 	for i in range(1, len(X)):
@@ -178,19 +204,6 @@ def fill(source, *reference):
 					break
 	return output
 
-def filter(data=Dict(), sources=[], keys=EMPTY):
-	if keys==EMPTY:
-		keys=data.keys()
-	for i in keys:
-		x=data[i]
-		if x==UNKNOWN:
-			for j in range(len(sources)):
-				if i in sources[j]:
-					x=sources[j][i]
-					break
-		data[i]=x
-	return data
-
 def to_dict(keys=None, values=None):
 	Y=Dict()
 	if keys!=None:
@@ -214,9 +227,6 @@ def to_list(data, keys=None):
 	for i in keys:
 		Y.append(data[i])
 	return Y
-
-def is_num(x):
-	return isinstance(x, int) or isinstance(x, float)
 
 def similarity(*data):
 	output=0
@@ -256,6 +266,7 @@ def rand_list(size, data):
 		y=rand_select(data)
 		Y.append(y)
 	return Y
+
 def TRUE(x):
 	return True
 
@@ -277,30 +288,3 @@ def ERROR(X):
 		y=X[i+1]
 		total+=pow(norm_error(x,y), 2)
 	return sqrt(total)
-
-def AND(*X):
-	if len(X)==1 and isinstance(X[0], list) or isinstance(X[0], tuple):
-		X=X[0]
-	return False not in X
-def OR(*X):
-	if len(X)==1 and isinstance(X[0], list) or isinstance(X[0], tuple):
-		X=X[0]
-	return True in X
-def NOT(*X):
-	if len(X)==1 and isinstance(X[0], list) or isinstance(X[0], tuple):
-		X=X[0]
-	return True not in X
-
-ALL=AND
-SOME=OR
-NO=NOT
-
-def EQ(*X):
-	if len(X)==1 and isinstance(X,list) or isinstance(X,tuple):
-		X=X[0]
-	if (isinstance(X, list) or isinstance(X, tuple)) and len(X)<2:
-		return True
-	elif isinstance(X, list):
-		if X[0]==X[1]:
-			return EQ(X[1:])
-		return False

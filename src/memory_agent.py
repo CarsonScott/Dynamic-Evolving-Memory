@@ -1,7 +1,16 @@
 from computer_agent import *
 
+class Trajectory(Object):
+	def __init__(self, initial=EMPTY, terminal=EMPTY):
+		inputs=list()
+		data=Dict()
+		if initial==EMPTY:inputs.append('initial')
+		else:data['initial']=initial
+		if terminal==EMPTY:inputs.append('terminal')
+		else:data['terminal']=terminal
+		super().__init__(['initial', 'terminal'], data)
+
 class MemoryAgent(ComputerAgent):
-	
 	def __init__(self, memory_size=UNKNOWN):
 		super().__init__()
 		self.define('inputs')
@@ -11,9 +20,9 @@ class MemoryAgent(ComputerAgent):
 		self.create('mutable', 'buffer', [])
 		self.create('mutable', 'output', [])
 		if memory_size!=UNKNOWN:
-			self.set_capacity('memory', memory_size)
+			self.set_attribute('memory', 'size', memory_size)
 
-	# Determine validity of syntax of expression.
+	# Determine validity of syntactic expression/expression block
 	def is_valid(self, expression):
 		if is_type(expression, tuple):
 			for i in range(len(expression)):
@@ -23,7 +32,7 @@ class MemoryAgent(ComputerAgent):
 			return True
 		return super().is_valid(expression)
 
-	# Record expression and compute results.
+	# Record/convert expression into function and compute output
 	def compute(self, expression, root=True):
 		if is_type(expression, str):
 			if self.in_class(expression, 'expressions'):
@@ -38,19 +47,13 @@ class MemoryAgent(ComputerAgent):
 			return outputs
 		else:return super().compute(expression)
 
-	# Convert expression into sentence
-	def encode(self, expression):
-		words=combine_elements(expression)
-		sentence=merge(' ', words)
-		return sentence
-
-	# Combine words into sentence and store in buffer.
+	# Combine words into sentence and store in buffer
 	def update_buffer(self, expression):
 		sentence=self.encode(expression)
 		self.send_to('buffer', sentence)
 		return sentence
 
-	# Combine sentences into phrase and store in memory. 
+	# Combine sentences into phrase and store in memory
 	def update_memory(self):
 		words=self['buffer']
 		sentences=combine_elements(words)
@@ -61,18 +64,18 @@ class MemoryAgent(ComputerAgent):
 		self['buffer']=[]
 		return self['memory']
 
-	# Associated phrases with results and store in output.
+	# Combine phrases with outputs and store in output 
 	def update_output(self, data):
 		buffer=self['buffer']
 		output=combine_rows(buffer, data)
 		self['output']=[]
 		for i in range(len(output)):
 			yi=output[i]
-			yi=Translation(*yi)
+			yi=Trajectory(*yi)
 			self.send_to('output', yi)
 		return self['output']
 
-	# Compute phrase-sequence and update mutable storage
+	# Compute expression sequence and update storage
 	def update(self, *data):
 		inputs=self.meta['inputs']
 		for i in range(len(data)):
@@ -86,23 +89,7 @@ class MemoryAgent(ComputerAgent):
 			output=self.compute(expression)
 			if output==None:
 				output=EMPTY
-
 			outputs.append(output)
 		output=self.update_output(outputs)
 		memory=self.update_memory()
 		return output
-
-	# determine options that satisfy constraint
-	def select(self, *data):
-		constraint=data[0]
-		options=data[1:][0]
-		data=[self[i] for i in options if i in self]
-		if constraint in self: 
-			function=self[constraint] 
-		else:function=constraint
-		indices=filter(function, *data)
-		outputs=[]
-		for i in indices:
-			oi=options[i]
-			outputs.append(oi)
-		return outputs	
