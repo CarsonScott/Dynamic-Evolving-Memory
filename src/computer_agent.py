@@ -2,15 +2,22 @@ from agent import *
 
 class Object(Model):
 	def __init__(self, inputs=[], data=Dict()):
-		self.inputs=inputs
+		self.inputs=[]
 		super().__init__()
 		[self.assign(i, UNKNOWN) for i in inputs]
 		[self.assign(i, data[i]) for i in data.keys()]
+		for i in range(len(inputs)):
+			key=inputs[i]
+			if self[key]==UNKNOWN:
+				self.inputs.append(key)
 
 	def set_input(self, key, data=UNKNOWN):
 		if key not in self.inputs:
 			self.inputs.append(key)
+		if data!=UNKNOWN:
+			del self.inputs[self.inputs.index(key)]
 		self.assign(key, data)
+		return self
 
 	def __call__(self, *data):
 		output=Model()
@@ -224,6 +231,9 @@ class ComputerAgent(Agent):
 				data=[data]
 			elif not is_type(data, list):
 				data=list(data)
+			for i in range(len(data)):
+				if self.is_valid(data[i]):
+					data[i]=self.execute(data[i])
 			return data, func
 		else:return UNKNOWN, UNKNOWN
 
@@ -245,23 +255,16 @@ class ComputerAgent(Agent):
 		output=self.execute(data,func)
 		return output
 
-	# determine options that satisfy constraint
-	def select(self, constraint, options):
-		data=[self[i] for i in options if i in self]
-		if constraint in self: 
-			function=self[constraint]
-		else:function=constraint
-
-		indices=filter(function, *data)
-		outputs=[]
-		for i in indices:
-			oi=options[i]
-			outputs.append(oi)
-		return outputs	
-
 	# Convert expression into sentence
 	def encode(self, expression):
 		words=combine_elements(expression)
 		sentence=merge(' ', words)
 		return sentence
 		
+ca=ComputerAgent()
+ca.create('variables', 'a', 5)
+ca.create('variables', 'b', 5)
+ca.create('expressions', 's', ['add', 'a', 'b'])
+print(ca.compute(ca.get('s')))
+print(ca.compute(['in-class', 'a', 'variables']))
+print(ca.compute(['add', 4, 4]))

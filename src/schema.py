@@ -7,7 +7,6 @@ def dimension(name, type=None):
 	return dim
 
 class Schema(Agent):
-	
 	def __init__(self, *dimensions):
 		super().__init__()
 		self.define('dimensions')
